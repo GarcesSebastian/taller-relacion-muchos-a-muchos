@@ -28,6 +28,9 @@ app.UseSwaggerUI(c =>
 
 app.UseAuthorization();
 
+// Al entrar a la raíz, redirigir a la interfaz de Swagger.
+app.MapGet("/", () => Results.Redirect("/swagger"));
+
 app.MapControllers();
 
 app.Run();
