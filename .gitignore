@@ -1,0 +1,16 @@
+# Compilados de .NET
+bin/
+obj/
+out/
+publish/
+
+# Archivos de usuario / IDE
+.vs/
+*.user
+*.suo
+*.userprefs
+.vscode/
+
+# Logs y temporales
+*.log
+*.tmp
