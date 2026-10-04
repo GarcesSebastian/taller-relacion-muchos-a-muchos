@@ -1,0 +1,481 @@
+{
+  "info": {
+    "_postman_id": "d4a9f1c2-6b7e-4e23-9c8a-3f20e1a7b901",
+    "name": "Matriculas Unisinu - .NET",
+    "description": "Coleccion de pruebas para el Sistema de Gestion de Matriculas Academicas (Unisinu).\n\nURL base configurada en la variable {{baseUrl}} = http://localhost:5000\n\nCada peticion incluye un test que valida el codigo de estado esperado y las reglas de negocio (borrado logico, asignatura activa y control de duplicados por periodo).\n\nIMPORTANTE sobre el orden: la coleccion esta pensada para ejecutarse de arriba hacia abajo (Collection Runner). Algunas peticiones modifican el estado en memoria (matriculan, inactivan o eliminan asignaturas). Si vuelves a correrla, reinicia la API (Ctrl + C y 'dotnet run') para recargar los datos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Listar asignaturas activas",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Devuelve un arreglo JSON', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json).to.be.an('array');",
+              "});",
+              "pm.test('Todas las asignaturas estan activas', function () {",
+              "    var json = pm.response.json();",
+              "    json.forEach(function (a) { pm.expect(a.activa).to.be.true; });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/asignaturas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "asignaturas"]
+        }
+      }
+    },
+    {
+      "name": "2. Listar estudiantes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Devuelve un arreglo JSON', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/estudiantes",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "estudiantes"]
+        }
+      }
+    },
+    {
+      "name": "3. Matricular estudiante (valida)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Devuelve la matricula con Id generado', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json).to.have.property('id');",
+              "    pm.expect(json).to.have.property('anio');",
+              "    pm.expect(json).to.have.property('periodo');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estudianteId\": 1,\n  \"asignaturaId\": 101,\n  \"anio\": 2026,\n  \"periodo\": \"2026-1\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matriculas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matriculas"]
+        }
+      }
+    },
+    {
+      "name": "4. Matricular duplicado en mismo periodo",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estudianteId\": 1,\n  \"asignaturaId\": 101,\n  \"anio\": 2026,\n  \"periodo\": \"2026-1\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matriculas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matriculas"]
+        }
+      }
+    },
+    {
+      "name": "5. Matricular con estudiante inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estudianteId\": 99,\n  \"asignaturaId\": 102\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matriculas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matriculas"]
+        }
+      }
+    },
+    {
+      "name": "6. Matricular con asignatura inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estudianteId\": 2,\n  \"asignaturaId\": 999\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matriculas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matriculas"]
+        }
+      }
+    },
+    {
+      "name": "7. Crear asignatura nueva",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Devuelve la asignatura con Id generado', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json).to.have.property('id');",
+              "    pm.expect(json.activa).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Redes de Computadores\",\n  \"codigo\": \"SIS-104\",\n  \"creditos\": 3\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/asignaturas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "asignaturas"]
+        }
+      }
+    },
+    {
+      "name": "8. Crear asignatura con codigo duplicado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Programacion Web II\",\n  \"codigo\": \"SIS-102\",\n  \"creditos\": 4\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/asignaturas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "asignaturas"]
+        }
+      }
+    },
+    {
+      "name": "9. Crear asignatura con datos invalidos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"\",\n  \"codigo\": \"\",\n  \"creditos\": 0\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/asignaturas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "asignaturas"]
+        }
+      }
+    },
+    {
+      "name": "10. Eliminar asignatura con matricula (borrado logico)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('La asignatura queda inactiva (Activa = false)', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.asignatura.activa).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/asignaturas/101",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "asignaturas", "101"]
+        }
+      }
+    },
+    {
+      "name": "11. Listar asignaturas (101 ya no aparece)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('La asignatura 101 ya no esta en la oferta', function () {",
+              "    var json = pm.response.json();",
+              "    var ids = json.map(function (a) { return a.id; });",
+              "    pm.expect(ids).to.not.include(101);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/asignaturas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "asignaturas"]
+        }
+      }
+    },
+    {
+      "name": "12. Matricular en asignatura inactiva",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estudianteId\": 2,\n  \"asignaturaId\": 101,\n  \"anio\": 2026,\n  \"periodo\": \"2026-1\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/matriculas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "matriculas"]
+        }
+      }
+    },
+    {
+      "name": "13. Eliminar asignatura sin matricula (borrado fisico)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 204', function () {",
+              "    pm.response.to.have.status(204);",
+              "});",
+              "pm.test('El cuerpo esta vacio', function () {",
+              "    pm.expect(pm.response.text()).to.eql('');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/asignaturas/103",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "asignaturas", "103"]
+        }
+      }
+    },
+    {
+      "name": "14. Historial de asignaturas del estudiante 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Incluye el estudiante y su listado de asignaturas', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json).to.have.property('estudiante');",
+              "    pm.expect(json).to.have.property('asignaturas');",
+              "    pm.expect(json.asignaturas).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/estudiantes/1/asignaturas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "estudiantes", "1", "asignaturas"]
+        }
+      }
+    },
+    {
+      "name": "15. Historial de estudiante inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/estudiantes/99/asignaturas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "estudiantes", "99", "asignaturas"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ]
+}
